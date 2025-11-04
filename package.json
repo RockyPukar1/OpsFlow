@@ -1,0 +1,30 @@
+{
+  "name": "OpsFlow",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "pnpm --parallel --filter \"@opsflow/*\" dev",
+    "build": "pnpm --filter ./apps/* build",
+    "lint": "eslint \"apps/**/*.{ts,tsx}\" --fix",
+    "lint:check": "eslint \"apps/**/*.{ts,tsx}\"",
+    "format": "pnpm --write \"apps/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.46.3",
+    "@typescript-eslint/parser": "^8.46.3",
+    "acorn": "latest",
+    "eslint": "^8.57.1",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.6",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3"
+  },
+  "lint-staged": {
+    "apps/**/*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  }
+}
