@@ -9,6 +9,7 @@ import { requestLogger } from "@/common/middleware/requestLogger";
 import { ApiError, ApiSuccess } from "@/common/utils/ApiResponse";
 import { connectDB } from "@/config/database";
 import logger from "@/config/logger";
+import { authRoutes } from "@/modules/auth/auth.routes";
 
 // Load environment variables
 dotenv.config();
@@ -48,7 +49,10 @@ app.get("/health", (req, res) => {
   ).send(res);
 });
 
-// TODO: API routes (will add modules here)
+// API routes
+app.use("/api/v1/auth", authRoutes);
+
+// API base route
 app.get("/api/v1", (req, res) => {
   new ApiSuccess(null, "OpsFlow API v1").send(res);
 });
