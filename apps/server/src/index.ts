@@ -4,12 +4,15 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 
+import { verifyToken } from "@/common/middleware/auth";
 import { errorHandler } from "@/common/middleware/errorHandler";
 import { requestLogger } from "@/common/middleware/requestLogger";
 import { ApiError, ApiSuccess } from "@/common/utils/ApiResponse";
 import { connectDB } from "@/config/database";
 import logger from "@/config/logger";
 import { authRoutes } from "@/modules/auth/auth.routes";
+import { projectRoutes } from "@/modules/tasks/project.routes";
+import { taskRoutes } from "@/modules/tasks/task.routes";
 
 // Load environment variables
 dotenv.config();
@@ -51,6 +54,8 @@ app.get("/health", (req, res) => {
 
 // API routes
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/projects", verifyToken, projectRoutes);
+app.use("/api/v1/tasks", verifyToken, taskRoutes);
 
 // API base route
 app.get("/api/v1", (req, res) => {

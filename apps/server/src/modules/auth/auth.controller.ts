@@ -55,6 +55,7 @@ export const loginController = async (
     if (error instanceof Error && error.name === "ZodError") {
       return next(new ValidationError("Invalid input data"));
     }
+    next(error);
   }
 };
 

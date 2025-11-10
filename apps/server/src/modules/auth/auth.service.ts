@@ -134,10 +134,12 @@ class AuthService {
     });
   }
 
-  verifyAccessToken(token: string): string {
+  verifyAccessToken(token: string): { userId: string } {
     try {
-      const decoded = jwt.verify(token, this.JWT_SECRET) as { userId: string };
-      return decoded.userId;
+      const decoded = jwt.verify(token, this.JWT_SECRET) as {
+        userId: string;
+      };
+      return decoded;
     } catch {
       throw new AuthenticationError("Invalid access token");
     }

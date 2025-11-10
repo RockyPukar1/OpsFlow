@@ -1,12 +1,14 @@
 import { Response } from "express";
 
+import { PaginationMeta } from "./pagination";
+
 export class ApiResponse<T = unknown> {
   constructor(
     public success: boolean,
     public statusCode: number,
     public message?: string,
     public data?: T,
-    public meta?: Record<string, unknown>,
+    public meta?: PaginationMeta,
   ) {}
 
   toJSON() {
@@ -28,7 +30,7 @@ export class ApiSuccess<T = unknown> extends ApiResponse<T> {
     data?: T,
     message?: string,
     statusCode = 200,
-    meta?: Record<string, unknown>,
+    meta?: PaginationMeta,
   ) {
     super(true, statusCode, message, data, meta);
   }
