@@ -1,3 +1,5 @@
+import { createServer } from "http";
+
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
@@ -14,11 +16,17 @@ import { authRoutes } from "@/modules/auth/auth.routes";
 import { projectRoutes } from "@/modules/tasks/project.routes";
 import { taskRoutes } from "@/modules/tasks/task.routes";
 
+import { queueManager } from "./modules/queue/queue.manager";
+import { webSocketService } from "./modules/realtime/websocket.service";
+
 // Load environment variables
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// HTTP server for WebSocket integration
+const httpServer = createServer(app);
 
 // Security middleware
 app.use(helmet());
@@ -45,9 +53,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger);
 
 // Health check endpoint
-app.get("/health", (req, res) => {
+app.get("/health", async (req, res) => {
+  const queueStats = await queueManager.getQueueStats();
+
   new ApiSuccess(
-    { timestamp: new Date().toISOString() },
+    {
+      timestamp: new Date().toISOString(),
+      websocket: !!webSocketService.getIO(),
+      queues: queueStats,
+    },
     "Server is running",
   ).send(res);
 });
@@ -74,9 +88,24 @@ app.use(errorHandler);
 const startServer = async () => {
   try {
     await connectDB();
-    app.listen(PORT, () => {
+
+    // Initialize WebSocket server
+    webSocketService.initialize(httpServer);
+
+    // Initialize queue manager
+    await queueManager.initialize();
+
+    httpServer.listen(PORT, () => {
       logger.info(`Server running on port ${PORT}`);
       logger.info(`Environment: ${process.env.NODE_ENV || "development"}`);
+      logger.info("WebSocket server initialized");
+      logger.info("Queue manager initialized");
+
+      if (process.env.BULL_BOARD_ENABLED === "true") {
+        logger.info(
+          `Queue dashboard available at: http://localhost:${PORT}/admin/queues`,
+        );
+      }
     });
   } catch (error) {
     logger.error("Failed to start server", error);
@@ -87,7 +116,8 @@ const startServer = async () => {
 startServer();
 
 // Graceful shutdown
-process.on("SIGTERM", () => {
+process.on("SIGTERM", async () => {
   logger.info("SIGTERM received, shutting down gracefully");
+  await queueManager.shutdown();
   process.exit(0);
 });
