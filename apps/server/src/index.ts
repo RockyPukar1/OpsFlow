@@ -6,6 +6,7 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 
+// Import modules that depend on environment variables AFTER dotenv.config()
 import { verifyToken } from "@/common/middleware/auth";
 import { errorHandler } from "@/common/middleware/errorHandler";
 import { requestLogger } from "@/common/middleware/requestLogger";
@@ -19,7 +20,7 @@ import { taskRoutes } from "@/modules/tasks/task.routes";
 import { queueManager } from "./modules/queue/queue.manager";
 import { webSocketService } from "./modules/realtime/websocket.service";
 
-// Load environment variables
+// Load environment variables FIRST
 dotenv.config();
 
 const app = express();

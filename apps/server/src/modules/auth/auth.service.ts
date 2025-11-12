@@ -16,14 +16,19 @@ export interface AuthResponse {
 }
 
 class AuthService {
-  private readonly JWT_SECRET = process.env.JWT_SECRET!;
-  private readonly JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET!;
+  private JWT_SECRET: string | undefined;
+  private JWT_REFRESH_SECRET: string | undefined;
   private readonly ACCESS_TOKEN_EXPIRES_IN = "15m";
   private readonly REFRESH_TOKEN_EXPIRES_IN = "7d";
 
-  constructor() {
+  private initializeSecrets() {
     if (!this.JWT_SECRET || !this.JWT_REFRESH_SECRET) {
-      throw new Error("JWT secrets are not configured");
+      this.JWT_SECRET = process.env.JWT_SECRET;
+      this.JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
+
+      if (!this.JWT_SECRET || !this.JWT_REFRESH_SECRET) {
+        throw new Error("JWT secrets are not configured");
+      }
     }
   }
 
@@ -116,6 +121,7 @@ class AuthService {
   }
 
   generateTokens(userId: string): TokenPair {
+    this.initializeSecrets();
     const accessToken = this.generateAccessToken(userId);
     const refreshToken = this.generateRefreshToken(userId);
 
@@ -123,31 +129,33 @@ class AuthService {
   }
 
   private generateAccessToken(userId: string): string {
-    return jwt.sign({ userId }, this.JWT_SECRET, {
+    return jwt.sign({ userId }, this.JWT_SECRET!, {
       expiresIn: this.ACCESS_TOKEN_EXPIRES_IN,
     });
   }
 
   private generateRefreshToken(userId: string): string {
-    return jwt.sign({ userId }, this.JWT_REFRESH_SECRET, {
+    return jwt.sign({ userId }, this.JWT_REFRESH_SECRET!, {
       expiresIn: this.REFRESH_TOKEN_EXPIRES_IN,
     });
   }
 
-  verifyAccessToken(token: string): { userId: string } {
+  verifyAccessToken(token: string): string {
+    this.initializeSecrets();
     try {
-      const decoded = jwt.verify(token, this.JWT_SECRET) as {
+      const decoded = jwt.verify(token, this.JWT_SECRET!) as {
         userId: string;
       };
-      return decoded;
+      return decoded.userId;
     } catch {
       throw new AuthenticationError("Invalid access token");
     }
   }
 
   verifyRefreshToken(token: string): string {
+    this.initializeSecrets();
     try {
-      const decoded = jwt.verify(token, this.JWT_REFRESH_SECRET) as {
+      const decoded = jwt.verify(token, this.JWT_REFRESH_SECRET!) as {
         userId: string;
       };
       return decoded.userId;
